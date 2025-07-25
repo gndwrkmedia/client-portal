@@ -10,57 +10,51 @@ try {
       credential: admin.credential.cert(serviceAccount),
     });
   }
-} catch (e) {
-  console.error("Firebase Admin SDK initialization error:", e);
-}
+} catch (e) { console.error("Firebase Admin SDK initialization error:", e); }
 const db = admin.firestore();
 
-// Initialize Square Client
+// Initialize Square Client for Production
 const squareClient = new Client({
-  environment: Environment.Sandbox, // Use .Production for real payments
+  environment: Environment.Production, // Changed from Sandbox
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
 });
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  const { invoiceId } = req.body;
-  if (!invoiceId) {
-    return res.status(400).json({ error: 'Invoice ID is required.' });
-  }
-
-  try {
-    const invoiceRef = db.collection("invoices").doc(invoiceId);
-    const invoiceDoc = await invoiceRef.get();
-
-    if (!invoiceDoc.exists) {
-      return res.status(404).json({ error: 'Invoice not found.' });
+    // ... rest of the function is the same
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
     }
-    const invoiceData = invoiceDoc.data();
-
-    const response = await squareClient.checkoutApi.createPaymentLink({
-      idempotencyKey: uuidv4(),
-      order: {
-        locationId: process.env.SQUARE_LOCATION_ID,
-        lineItems: [{
-          name: `Payment for Invoice #${invoiceData.invoiceNumber}`,
-          quantity: "1",
-          basePriceMoney: {
-            amount: invoiceData.amount * 100, // Amount in cents
-            currency: "USD",
-          },
-        }],
-        metadata: {
-          invoiceId: invoiceId, // This links the payment back to our invoice
-        },
-      },
-    });
-
-    res.status(200).json({ checkoutUrl: response.result.paymentLink.url });
-  } catch (error) {
-    console.error("API Error:", error);
-    res.status(500).json({ error: 'Could not create payment link.' });
-  }
+    const { invoiceId } = req.body;
+    if (!invoiceId) {
+        return res.status(400).json({ error: 'Invoice ID is required.' });
+    }
+    try {
+        const invoiceRef = db.collection("invoices").doc(invoiceId);
+        const invoiceDoc = await invoiceRef.get();
+        if (!invoiceDoc.exists) {
+            return res.status(404).json({ error: 'Invoice not found.' });
+        }
+        const invoiceData = invoiceDoc.data();
+        const response = await squareClient.checkoutApi.createPaymentLink({
+            idempotencyKey: uuidv4(),
+            order: {
+                locationId: process.env.SQUARE_LOCATION_ID,
+                lineItems: [{
+                    name: `Payment for Invoice #${invoiceData.invoiceNumber}`,
+                    quantity: "1",
+                    basePriceMoney: {
+                        amount: invoiceData.amount * 100,
+                        currency: "USD",
+                    },
+                }],
+                metadata: {
+                    invoiceId: invoiceId, 
+                },
+            },
+        });
+        res.status(200).json({ checkoutUrl: response.result.paymentLink.url });
+    } catch (error) {
+        console.error("API Error:", error);
+        res.status(500).json({ error: 'Could not create payment link.' });
+    }
 };
