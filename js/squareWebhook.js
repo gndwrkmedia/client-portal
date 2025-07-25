@@ -1,4 +1,4 @@
-const { Client, Environment, WebhooksHelper } = require('square'); // Corrected import
+const { Client, Environment, WebhooksHelper } = require('square');
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK

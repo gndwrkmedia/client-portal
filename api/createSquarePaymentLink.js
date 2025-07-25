@@ -1,4 +1,4 @@
-const { Client, Environment } = require("square"); // Corrected import
+const { Client, Environment } = require("square");
 const { v4: uuidv4 } = require("uuid");
 const admin = require("firebase-admin");
 
