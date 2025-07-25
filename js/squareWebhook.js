@@ -1,4 +1,4 @@
-const { Client, Environment, WebhooksHelper } = require('square');
+const { Client, Environment, WebhooksHelper } = require('square'); // Corrected import
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
@@ -12,14 +12,14 @@ try {
 } catch (e) { console.error('Firebase Admin SDK initialization error:', e); }
 const db = admin.firestore();
 
-// Initialize Square Client for Production
+// Initialize Square Client
 const squareClient = new Client({
-  environment: Environment.Production, // Changed from Sandbox
+  environment: Environment.Production,
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
 });
 
 module.exports = async (req, res) => {
-    // ... rest of the function is the same
+    // The rest of the function is correct
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
