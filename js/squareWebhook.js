@@ -1,3 +1,6 @@
+module.exports = async (req, res) => {
+  console.log("--- RUNNING LATEST CODE CHECK ---");
+
 const { Client, Environment, WebhooksHelper } = require('square');
 const admin = require('firebase-admin');
 
