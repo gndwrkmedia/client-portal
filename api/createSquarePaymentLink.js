@@ -3,12 +3,15 @@ const { v4: uuidv4 } = require("uuid");
 const admin = require("firebase-admin");
 
 // Initialize Firebase Admin SDK
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+try {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  }
+} catch (e) {
+  console.error("Firebase Admin SDK initialization error:", e);
 }
 const db = admin.firestore();
 
@@ -49,6 +52,9 @@ module.exports = async (req, res) => {
             currency: "USD",
           },
         }],
+        metadata: {
+          invoiceId: invoiceId, // This links the payment back to our invoice
+        },
       },
     });
 
