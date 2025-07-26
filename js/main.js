@@ -35,7 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginEmailInput = document.getElementById('loginEmail');
     const loginPasswordInput = document.getElementById('loginPassword');
     const loginButton = document.getElementById('loginButton');
-
+    const showSignupLink = document.getElementById('show-signup-link');
+    const showLoginLink = document.getElementById('show-login-link');
+    const signupButton = document.getElementById('signupButton');
+    
     // --- Firebase Auth State Listener ---
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -53,89 +56,114 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Event Listeners ---
-    loginButton.addEventListener('click', () => {
-        auth.signInWithEmailAndPassword(loginEmailInput.value, loginPasswordInput.value)
-            .catch(error => alert('Login failed: ' + error.message));
-    });
+    if (loginButton) {
+        loginButton.addEventListener('click', () => {
+            auth.signInWithEmailAndPassword(loginEmailInput.value, loginPasswordInput.value)
+                .catch(error => alert('Login failed: ' + error.message));
+        });
+    }
 
     if (logoutButton) logoutButton.addEventListener('click', () => auth.signOut());
     
-    document.getElementById('show-signup-link').addEventListener('click', (e) => { e.preventDefault(); loginView.classList.add('d-none'); signupView.classList.remove('d-none'); });
-    document.getElementById('show-login-link').addEventListener('click', (e) => { e.preventDefault(); signupView.classList.add('d-none'); loginView.classList.remove('d-none'); });
+    if (showSignupLink) {
+        showSignupLink.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            loginView.classList.add('d-none'); 
+            signupView.classList.remove('d-none'); 
+        });
+    }
 
-    document.getElementById('signupButton').addEventListener('click', () => {
-        const name = document.getElementById('signupName').value;
-        if (!name) return alert('Please enter your name.');
-        auth.createUserWithEmailAndPassword(document.getElementById('signupEmail').value, document.getElementById('signupPassword').value)
-            .then(cred => cred.user.updateProfile({ displayName: name })
-                .then(() => db.collection('users').doc(cred.user.uid).set({
-                    displayName: name,
-                    email: cred.user.email,
-                    role: 'client',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }))
-            )
-            .catch(error => alert('Signup failed: ' + error.message));
-    });
+    if (showLoginLink) {
+        showLoginLink.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            signupView.classList.add('d-none'); 
+            loginView.classList.remove('d-none'); 
+        });
+    }
 
-    navDashboard.addEventListener('click', (e) => { e.preventDefault(); showDashboard(); });
-    navBilling.addEventListener('click', (e) => { e.preventDefault(); showBilling(); });
+    if (signupButton) {
+        signupButton.addEventListener('click', () => {
+            const name = document.getElementById('signupName').value;
+            if (!name) return alert('Please enter your name.');
+            auth.createUserWithEmailAndPassword(document.getElementById('signupEmail').value, document.getElementById('signupPassword').value)
+                .then(cred => cred.user.updateProfile({ displayName: name })
+                    .then(() => db.collection('users').doc(cred.user.uid).set({
+                        displayName: name,
+                        email: cred.user.email,
+                        role: 'client',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }))
+                )
+                .catch(error => alert('Signup failed: ' + error.message));
+        });
+    }
 
-    sendMessageBtn.addEventListener('click', () => {
-        const messageText = messageInput.value.trim();
-        if (messageText && currentProjectId) {
-            db.collection('projects').doc(currentProjectId).collection('messages').add({
-                text: messageText,
-                senderId: auth.currentUser.uid,
-                senderName: auth.currentUser.displayName,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            messageInput.value = '';
-        }
-    });
+    if (navDashboard) navDashboard.addEventListener('click', (e) => { e.preventDefault(); showDashboard(); });
+    if (navBilling) navBilling.addEventListener('click', (e) => { e.preventDefault(); showBilling(); });
 
-    uploadFileBtn.addEventListener('click', () => {
-        const file = fileInput.files[0];
-        if (!file || !currentProjectId) return;
-        const uploadTask = storage.ref(`projects/${currentProjectId}/${file.name}`).put(file);
-        uploadTask.on('state_changed', null, err => console.error(err), () => {
-            uploadTask.snapshot.ref.getDownloadURL().then(url => {
-                db.collection('projects').doc(currentProjectId).collection('files').add({
-                    name: file.name, url, uploaderName: auth.currentUser.displayName,
+    if (sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', () => {
+            const messageText = messageInput.value.trim();
+            if (messageText && currentProjectId) {
+                db.collection('projects').doc(currentProjectId).collection('messages').add({
+                    text: messageText,
+                    senderId: auth.currentUser.uid,
+                    senderName: auth.currentUser.displayName,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                fileInput.value = '';
+                messageInput.value = '';
+            }
+        });
+    }
+
+    if (uploadFileBtn) {
+        uploadFileBtn.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (!file || !currentProjectId) return;
+            const uploadTask = storage.ref(`projects/${currentProjectId}/${file.name}`).put(file);
+            uploadTask.on('state_changed', null, err => console.error(err), () => {
+                uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                    db.collection('projects').doc(currentProjectId).collection('files').add({
+                        name: file.name, url, uploaderName: auth.currentUser.displayName,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    fileInput.value = '';
+                });
             });
         });
-    });
+    }
     
-    invoicesList.addEventListener('click', async (e) => {
-        if (e.target && e.target.matches('button.pay-now-btn')) {
-            const invoiceId = e.target.dataset.invoiceId;
-            e.target.textContent = 'Creating Link...';
-            e.target.disabled = true;
+    if (invoicesList) {
+        invoicesList.addEventListener('click', async (e) => {
+            if (e.target && e.target.matches('button.pay-now-btn')) {
+                const invoiceId = e.target.dataset.invoiceId;
+                e.target.textContent = 'Creating Link...';
+                e.target.disabled = true;
 
-            try {
-                const response = await fetch('/api/createSquarePaymentLink', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ invoiceId: invoiceId }),
-                });
-                if (!response.ok) throw new Error('Failed to create payment link.');
-                const data = await response.json();
-                window.location.href = data.checkoutUrl;
-            } catch (error) {
-                console.error("Error creating payment link:", error);
-                alert("Could not create payment link. Please try again later.");
-                e.target.textContent = 'Pay Now';
-                e.target.disabled = false;
+                try {
+                    const response = await fetch('/api/createSquarePaymentLink', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ invoiceId: invoiceId }),
+                    });
+                    if (!response.ok) throw new Error('Failed to create payment link.');
+                    const data = await response.json();
+                    window.location.href = data.checkoutUrl;
+                } catch (error) {
+                    console.error("Error creating payment link:", error);
+                    alert("Could not create payment link. Please try again later.");
+                    e.target.textContent = 'Pay Now';
+                    e.target.disabled = false;
+                }
             }
-        }
-    });
+        });
+    }
 
     // --- UI Display & Navigation Functions ---
     function setActiveNav(activeLink) {
-        [navDashboard, navBilling].forEach(link => link.classList.remove('active', 'text-white'));
+        [navDashboard, navBilling].forEach(link => {
+            if(link) link.classList.remove('active', 'text-white');
+        });
         if (activeLink) activeLink.classList.add('active', 'text-white');
     }
 
@@ -146,7 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
         projectDetailView.classList.add('d-none');
         projectsList.classList.remove('d-none');
         setActiveNav(navDashboard);
-        fetchProjects(auth.currentUser.uid);
+        if (auth.currentUser) {
+            fetchProjects(auth.currentUser.uid);
+        }
         if (messageUnsubscribe) messageUnsubscribe();
         if (fileUnsubscribe) fileUnsubscribe();
     }
@@ -156,7 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardView.classList.add('d-none');
         billingView.classList.remove('d-none');
         setActiveNav(navBilling);
-        fetchInvoices(auth.currentUser.uid);
+        if (auth.currentUser) {
+            fetchInvoices(auth.currentUser.uid);
+        }
     }
 
     async function showProjectDetail(projectId) {
@@ -244,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const invoice = doc.data();
                 const statusColor = invoice.status === 'Paid' ? 'text-bg-success' : 'text-bg-danger';
                 const issueDate = invoice.issueDate.toDate().toLocaleDateString();
+                const amountFormatted = (typeof invoice.amount === 'number') ? invoice.amount.toFixed(2) : 'N/A';
                 const payButtonHtml = invoice.status !== 'Paid'
                     ? `<button class="btn btn-primary btn-sm pay-now-btn" data-invoice-id="${doc.id}">Pay Now</button>`
                     : `<span class="text-success">${invoice.status}</span>`;
@@ -252,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr>
                         <td>#${invoice.invoiceNumber}</td>
                         <td>${issueDate}</td>
-                        <td>$${invoice.amount.toFixed(2)}</td>
+                        <td>$${amountFormatted}</td>
                         <td><span class="badge ${statusColor}">${invoice.status}</span></td>
                         <td>${payButtonHtml}</td>
                     </tr>
