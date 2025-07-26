@@ -1,5 +1,4 @@
-import square from 'square';
-const { Client, Environment } = square;
+import { Client } from 'square';
 import { v4 as uuidv4 } from 'uuid';
 import admin from 'firebase-admin';
 
@@ -16,7 +15,7 @@ const db = admin.firestore();
 
 // Initialize Square Client
 const squareClient = new Client({
-  environment: Environment.Production,
+  environment: 'production', // Use the raw string 'production'
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
 });
 

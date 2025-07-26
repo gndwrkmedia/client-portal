@@ -1,5 +1,4 @@
-import square from 'square';
-const { Client, Environment, WebhooksHelper } = square;
+import { Client, WebhooksHelper } from 'square';
 import admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
@@ -15,7 +14,7 @@ const db = admin.firestore();
 
 // Initialize Square Client
 const squareClient = new Client({
-  environment: Environment.Production,
+  environment: 'production', // Use the raw string 'production'
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
 });
 
