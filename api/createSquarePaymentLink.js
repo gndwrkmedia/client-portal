@@ -1,6 +1,4 @@
-const square = require("square");
-// Correctly access Client and Environment from the .default property
-const { Client, Environment } = square.default;
+const { Client, SquareEnvironment } = require("square");
 const { v4: uuidv4 } = require("uuid");
 const admin = require("firebase-admin");
 
@@ -19,7 +17,7 @@ const db = admin.firestore();
 
 // Initialize Square Client
 const squareClient = new Client({
-  environment: Environment.Production,
+  environment: SquareEnvironment.Production, // Use the correct object name
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
 });
 

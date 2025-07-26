@@ -1,6 +1,4 @@
-const square = require("square");
-// Correctly access components from the .default property
-const { Client, Environment, WebhooksHelper } = square.default;
+const { Client, SquareEnvironment, WebhooksHelper } = require('square');
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
@@ -16,7 +14,7 @@ const db = admin.firestore();
 
 // Initialize Square Client
 const squareClient = new Client({
-  environment: Environment.Production,
+  environment: SquareEnvironment.Production, // Use the correct object name
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
 });
 
