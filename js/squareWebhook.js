@@ -1,4 +1,5 @@
-import { Client, Environment, WebhooksHelper } from 'square';
+import square from 'square';
+const { Client, Environment, WebhooksHelper } = square;
 import admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK

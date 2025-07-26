@@ -1,4 +1,5 @@
-import { Client, Environment } from 'square';
+import square from 'square';
+const { Client, Environment } = square;
 import { v4 as uuidv4 } from 'uuid';
 import admin from 'firebase-admin';
 
