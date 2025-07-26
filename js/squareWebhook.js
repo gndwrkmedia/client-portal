@@ -1,4 +1,4 @@
-const { Client, SquareEnvironment, WebhooksHelper } = require('square');
+const square = require('square');
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
@@ -12,9 +12,9 @@ try {
 } catch (e) { console.error('Firebase Admin SDK initialization error:', e); }
 const db = admin.firestore();
 
-// Initialize Square Client
-const squareClient = new Client({
-  environment: SquareEnvironment.Production, // Use the correct object name
+// Initialize Square Client using the correct nested structure
+const squareClient = new square.Client({
+  environment: square.SquareEnvironment.Production,
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
 });
 
@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     const signatureKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
 
     try {
-        const isValid = WebhooksHelper.isValidWebhookEventSignature(
+        const isValid = square.WebhooksHelper.isValidWebhookEventSignature(
         JSON.stringify(req.body), signature, signatureKey, webhookUrl
         );
 

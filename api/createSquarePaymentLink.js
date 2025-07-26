@@ -1,4 +1,4 @@
-const { Client, SquareEnvironment } = require("square");
+const square = require("square");
 const { v4: uuidv4 } = require("uuid");
 const admin = require("firebase-admin");
 
@@ -15,9 +15,9 @@ try {
 }
 const db = admin.firestore();
 
-// Initialize Square Client
-const squareClient = new Client({
-  environment: SquareEnvironment.Production, // Use the correct object name
+// Initialize Square Client using the correct nested structure
+const squareClient = new square.Client({
+  environment: square.SquareEnvironment.Production,
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
 });
 
